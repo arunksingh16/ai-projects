@@ -13,8 +13,9 @@ export class BedrockStack extends cdk.Stack {
       handler: 'handler.handler',
       code: lambda.Code.fromAsset('lambda'),
       environment: {
-        REGION: 'eu-west-1',
-      }
+        REGION: `${process.env.CDK_DEFAULT_REGION}`,
+      },
+      timeout: cdk.Duration.seconds(30)
     });
 
     // Add permissions to call Bedrock

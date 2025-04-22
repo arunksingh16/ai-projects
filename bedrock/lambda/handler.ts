@@ -1,6 +1,8 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 
-const client = new BedrockRuntimeClient({ region: "eu-west-1" });
+const client = new BedrockRuntimeClient({ 
+    region: process.env.REGION || "eu-west-1" // Use environment variable with fallback
+});
 
 exports.handler = async (event: any) => {
     try {

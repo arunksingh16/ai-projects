@@ -1,4 +1,6 @@
 # AWS Strands with Ollama
+An artificial intelligence (AI) agent refers to a system or program that is capable of autonomously performing tasks on behalf of a user or another system by designing its workflow and utilizing available tools. [https://www.ibm.com/think/topics/ai-agents]
+
 
 - download the model
 ```

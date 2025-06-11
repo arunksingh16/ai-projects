@@ -1,0 +1,5 @@
+streamlit
+boto3
+python-dotenv
+strands-agents~=0.1.0
+strands-agents-tools

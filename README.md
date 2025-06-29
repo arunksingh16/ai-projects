@@ -5,7 +5,21 @@ You should know about
 - Key features of an AI agent
 
 
-Must Read Links -
+### Frameworks
+- Langchain - https://www.ibm.com/think/topics/langchain
+- AWS Strands
+- OpenAI Agents - https://github.com/openai/openai-agents-python
+- 
+
+### Must Read Links -
 - https://www.ibm.com/think/topics/ai-agents
 - ReAct Framework [https://arxiv.org/pdf/2210.03629]
 - https://cloud.google.com/discover/what-are-ai-agents
+- https://www.ibm.com/think/topics/agentic-architecture
+
+### Projects to Watch Out for 
+
+- Mem0 Memory for AI Agents : https://github.com/mem0ai/mem0
+- AG-UI: The Agent-User Interaction Protocol: https://github.com/ag-ui-protocol/ag-ui
+- Deep Research for GitHub.: https://deepwiki.com/
+- platform that allows you to create, deploy, and manage continuous AI agents that automate complex workflows. https://github.com/Significant-Gravitas/AutoGPT

@@ -8,6 +8,7 @@ You should know about
 ### Frameworks
 - Langchain - https://www.ibm.com/think/topics/langchain
 - AWS Strands
+- AWS Agent Squad - https://github.com/awslabs/agent-squad
 - OpenAI Agents - https://github.com/openai/openai-agents-python
 - 
 
@@ -23,3 +24,4 @@ You should know about
 - AG-UI: The Agent-User Interaction Protocol: https://github.com/ag-ui-protocol/ag-ui
 - Deep Research for GitHub.: https://deepwiki.com/
 - platform that allows you to create, deploy, and manage continuous AI agents that automate complex workflows. https://github.com/Significant-Gravitas/AutoGPT
+- Evals is a framework for evaluating LLMs and LLM systems, and an open-source registry of benchmarks. https://github.com/openai/evals

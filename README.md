@@ -18,6 +18,10 @@ You should know about
 - https://cloud.google.com/discover/what-are-ai-agents
 - https://www.ibm.com/think/topics/agentic-architecture
 
+## Agent Builder Workshops
+- https://code.visualstudio.com/docs/intelligentapps/agentbuilder
+- https://techcommunity.microsoft.com/blog/azuredevcommunityblog/build-ai-agents-end-to-end-in-vs-code/4418117
+
 ### Projects to Watch Out for 
 
 - Mem0 Memory for AI Agents : https://github.com/mem0ai/mem0

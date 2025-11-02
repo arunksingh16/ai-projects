@@ -6,7 +6,7 @@ from datetime import datetime
 from langchain_openai import AzureChatOpenAI
 from langchain_community.callbacks import get_openai_callback
 from langchain_core.callbacks import get_usage_metadata_callback, UsageMetadataCallbackHandler
-from langchain.memory import ConversationBufferMemory
+from langchain_classic.memory import ConversationBufferMemory
 
 # Load environment variables from config file if it exists
 def load_env_file(filepath):
@@ -23,8 +23,7 @@ def load_env_file(filepath):
 for config_file in ['config.env', '.env', 'config.txt']:
     load_env_file(config_file)
 
-# Set environment variables directly (like in agent.py)
-os.environ["AZURE_OPENAI_ENDPOINT"] = "https://demo.openai.azure.com/"
+
 
 # Debug: Check if required environment variables are set
 required_vars = ['AZURE_OPENAI_API_KEY', 'AZURE_OPENAI_ENDPOINT']

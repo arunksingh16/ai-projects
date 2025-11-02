@@ -28,10 +28,7 @@ A comprehensive AI agent built with LangChain and Streamlit, featuring Azure Ope
    ```
 
 3. **Set up environment variables**:
-   ```bash
-   export AZURE_OPENAI_API_KEY="your-api-key"
-   export AZURE_OPENAI_ENDPOINT="https://your-endpoint.openai.azure.com/"
-   ```
+ Please make sure to update config.json
 
 4. **Configure models** (optional):
    - Edit `model_configs.json` to add/remove models

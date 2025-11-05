@@ -1,6 +1,31 @@
 # Sample Agent (LangChain) for AgentCore HTTP
 
-This sample demonstrates a minimal AgentCore HTTP runtime using LangChain with optional persistent short‑term memory via AgentCore Memory.
+This sample demonstrates a minimal AgentCore HTTP runtime using LangChain with optional persistent short‑term memory via AgentCore Memory. 
+
+## Overview
+
+This project provides an **AI-powered support agent** for AWS queries, built with the AgentCore SDK (not the Agent Starter Kit).  
+It features:
+- Responsive chatbot interface for AWS support queries
+- Streamlit-powered frontend (chat & history)
+- AgentCore managed memory (summarizes up to 10 days of interactions)
+- One-click deployment using AWS CDK in `eu-west-1`
+
+## Architecture
+
+- **Agent:**  
+  Main logic in `agent.py`, implements conversational AWS support agent using the AgentCore SDK.
+
+- **Memory:**  
+  Uses AgentCore Memory (fully managed), which keeps short-term summaries of chat history for 10 days — preserving key insights/context for better responses.
+
+- **Frontend:**  
+  Built with **Streamlit**. Users can interact directly, see chat history.  
+  _No authentication required._
+
+- **Infra:**  
+  The `infra/` folder contains AWS CDK setup for deploying agent and memory, including all required IAM roles and configuration.
+
 
 ## Endpoints
 - `GET /ping` – health check (AgentCore SDK)
@@ -22,9 +47,28 @@ This mirrors the AWS “customer scenario” steps (capture turns, retrieve last
 
 ## Deployment
 
-Use CDK Stack in Infra folder to deploy AgentCore and Memory. Use Agent ARN in `frontend.py` to test.
+```bash
+# Clone repo
+git clone https://github.com/arunksingh16/ai-projects.git
+cd ai-projects/aws-bedrock-agentcore-sdk
 
+# Install Python dependencies
+pip install -r requirements.txt
 
+# Bootstrap AWS CDK (if first time)
+cd infra
+npm install
+cdk bootstrap
+
+# Deploy agent and memory stack (default to eu-west-1)
+cdk deploy
+```
+
+### Run the Frontend
+
+```bash
+streamlit run frontend.py
+```
 
 
 ## References

@@ -30,3 +30,5 @@ You should know about
 - platform that allows you to create, deploy, and manage continuous AI agents that automate complex workflows. https://github.com/Significant-Gravitas/AutoGPT
 - Evals is a framework for evaluating LLMs and LLM systems, and an open-source registry of benchmarks. https://github.com/openai/evals
 - User-friendly AI Interface (Supports Ollama, OpenAI API) https://github.com/open-webui/open-webui
+
+### References

@@ -5,7 +5,9 @@ Get your AWS News Slack Bot running in 5 minutes! You can test this bot on your 
 ![Slack Bot in Action](./assets/slack.png)
 
 ```
-⚠️ Please note I am running my AWS news mcp server locally 😀. The MCP server is a simple HTTP server that provides the `/tools/` endpoint for the bot to call. You can run it from:
+⚠️ Please note I am running my AWS news mcp server locally 😀. 
+The MCP server is a simple HTTP server that provides the required endpoint
+for the bot to call. You can run it from:
 -  https://github.com/arunksingh16/aws-news-mcp
 ```
 

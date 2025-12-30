@@ -58,7 +58,7 @@ groups:history
 **Event Subscriptions** → Enable → **Bot Events**:
 ```
 app_mention
-message.im
+message.channels
 ```
 
 ### Install App

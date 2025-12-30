@@ -81,8 +81,8 @@ handle_mention() → Extracts text
 chat_with_llm(user_message)
        │
        ├─────────────────────┐
-       │                      │
-       ▼                      ▼
+       │                     │
+       ▼                     ▼
 [Azure OpenAI]         [Conversation Context]
        │
        ▼

@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  slack-bot:
+    build: .
+    container_name: aws-news-slack-bot
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      - aws-news-network
+
+networks:
+  aws-news-network:
+    driver: bridge
+

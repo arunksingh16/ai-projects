@@ -39,6 +39,11 @@ channels:history
 groups:history
 ```
 
+### Enable org-readiness
+
+1. Go to **org-level** → **Enable org-readiness**
+
+
 ### Enable Socket Mode
 
 1. **Socket Mode** → Enable

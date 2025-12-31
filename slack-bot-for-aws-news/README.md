@@ -46,6 +46,7 @@ groups:history
 ### Add Redirect URLs
 You will need to configure redirect URLs in order to automatically generate the Add to Slack button or to distribute your app.
 
+
 ### Enable Socket Mode
 
 1. **Socket Mode** → Enable
@@ -53,6 +54,13 @@ You will need to configure redirect URLs in order to automatically generate the 
 3. Save token (starts with `xapp-`)
 
    ![Slack App Permissions](./assets/slack-socketMode.png)
+
+
+### Event Subscriptions
+- Enable events
+- check following image
+
+   ![Slack App](./assets/slack_event.png)
 
 ### Add Slash Command
 

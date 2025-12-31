@@ -43,6 +43,8 @@ groups:history
 
 1. Go to **org-level** → **Enable org-readiness**
 
+### Add Redirect URLs
+You will need to configure redirect URLs in order to automatically generate the Add to Slack button or to distribute your app.
 
 ### Enable Socket Mode
 

@@ -1,0 +1,13 @@
+fastmcp==2.13.0.1
+httpx==0.28.1
+uvicorn==0.38.0
+fastapi==0.120.0
+pytest==8.3.4
+pytest-asyncio==0.24.0
+feedparser==6.0.11
+mangum==0.19.0
+pydantic>=2.4.0
+pydantic-core>=2.10.0
+mcp
+requests
+beautifulsoup4

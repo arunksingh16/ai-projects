@@ -9,6 +9,11 @@ You should know about
 - https://github.com/ComposioHQ/awesome-claude-skills
 - https://github.com/travisvn/awesome-claude-skills
 
+### Diagrams
+- https://excalidraw.com/
+
+
+
 ### Frameworks
 - Langchain - https://www.ibm.com/think/topics/langchain
 - AWS Strands

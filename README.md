@@ -12,8 +12,6 @@ You should know about
 ### Diagrams
 - https://excalidraw.com/
 
-
-
 ### Frameworks
 - Langchain - https://www.ibm.com/think/topics/langchain
 - AWS Strands
@@ -26,6 +24,7 @@ You should know about
 - ReAct Framework [https://arxiv.org/pdf/2210.03629]
 - https://cloud.google.com/discover/what-are-ai-agents
 - https://www.ibm.com/think/topics/agentic-architecture
+- https://github.com/github-samples/copilot-in-a-box?tab=readme-ov-file
 
 ## Agent Builder Workshops
 - https://code.visualstudio.com/docs/intelligentapps/agentbuilder

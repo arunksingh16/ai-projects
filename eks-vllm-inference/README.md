@@ -1,4 +1,12 @@
+# Inference with AWS EKS
 
+
+```
+# Quick way to see who currently has cluster admin
+kubectl describe configmap aws-auth -n kube-system
+aws eks list-access-entries --cluster-name llm-inference-poc \
+--region eu-west-1
+```
 
 
 ## Install CSI driver for Amazon EBS

@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vllm-inference
+  namespace: inference
+  labels:
+    app: vllm-inference
+    version: "0.1.0"
+spec:
+  replicas: 1  # HPA manages scale-out; start at 1 to control Spot cost
+  selector:
+    matchLabels:
+      app: vllm-inference
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0  # never take all capacity offline; works with PDB
+  template:
+    metadata:
+      labels:
+        app: vllm-inference
+      annotations:
+        # IRSA: must match the service account role ARN from CDK output
+        eks.amazonaws.com/role-arn: "<Cluster IAM role ARN>"
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: vllm
+      # Tolerate the gpu taint applied to the GPU node group
+      tolerations:
+        - key: "nvidia.com/gpu"
+          operator: "Equal"
+          value: "true"
+          effect: "NoSchedule"
+        - key: "node.kubernetes.io/disk-pressure"
+          operator: "Exists"
+          effect: "NoSchedule"
+      # Force scheduling onto GPU nodes
+      nodeSelector:
+        workload: gpu
+
+      # ── Init container: use node cache; fall back to S3 only if needed ────────
+      # The model-prefetch DaemonSet (model-prefetch-daemonset.yaml) downloads
+      # the model to /mnt/models/ on the node before this pod starts.
+      # The sentinel file .model_ready is written only after a complete download.
+      # This init container skips S3 sync when the sentinel exists, reducing
+      # pod start time from ~5-6 min to ~90-120s (VRAM load only) on warm nodes.
+      # On a fresh node where the DaemonSet hasn't finished yet, this container
+      # falls back to a full S3 sync so the pod is never permanently blocked.
+      initContainers:
+        - name: model-downloader
+          image: amazon/aws-cli:latest
+          command:
+            - /bin/sh
+            - -c
+            - |
+              SENTINEL="/model/.model_ready"
+              if [ -f "$SENTINEL" ]; then
+                echo "Node cache hit — model already present. Skipping S3 sync."
+                exit 0
+              fi
+              echo "Node cache miss — downloading model weights from S3..."
+              aws s3 sync s3://$(MODEL_BUCKET)/models/mistral-7b-instruct-v0.2/ /model/ \
+                --no-progress
+              touch "$SENTINEL"
+              echo "Download complete."
+          env:
+            - name: MODEL_BUCKET
+              valueFrom:
+                configMapKeyRef:
+                  name: vllm-config
+                  key: model_bucket
+          volumeMounts:
+            - name: model-weights
+              mountPath: /model
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "2Gi"
+            limits:
+              cpu: "1"
+              memory: "4Gi"
+
+      containers:
+        - name: vllm
+          # v0.6.6: first stable release with the `vllm serve` CLI entrypoint.
+          # Do not downgrade to v0.4.2 — it lacked `vllm serve` and had the now-
+          # removed `--max-num-batches` flag that caused immediate startup failure.
+          image: vllm/vllm-openai:v0.6.6
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              vllm serve /model \
+                --port 8000 \
+                --max-model-len 4096 \
+                --max-num-seqs 256 \
+                --tensor-parallel-size 1 \
+                --gpu-memory-utilization 0.90 \
+                --trust-remote-code \
+                --enable-chunked-prefill \
+                --served-model-name mistral-7b \
+                --disable-log-requests
+
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # ── Resource requests ─────────────────────────────────────────────
+          # GPU resources are NOT overcommittable in Kubernetes.
+          # Requesting 1 GPU pins the entire physical device to this pod.
+          # Tradeoff: full isolation (no noisy-neighbour GPU contention) at
+          # the cost of one pod per node. Acceptable for POC.
+          resources:
+            requests:
+              nvidia.com/gpu: "1"
+              memory: "12Gi"
+              cpu: "2"
+            limits:
+              nvidia.com/gpu: "1"
+              memory: "14Gi"
+              cpu: "4"
+
+          # ── Probes ───────────────────────────────────────────────────────
+          # Pattern from official vLLM k8s docs:
+          #   startupProbe  — owns model load time; kills pod if never ready
+          #   readinessProbe — gates traffic; runs only after startup succeeds
+          #   livenessProbe  — restarts hung pods; runs only after startup succeeds
+          #
+          # startupProbe: 30 checks × 10s = 300s max for model to come up.
+          # Mistral-7B on warm node disk takes ~90-120s; 300s gives safe headroom.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 30
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 30
+            failureThreshold: 5  # tolerate transient GPU pauses before restarting
+
+          volumeMounts:
+            - name: model-weights
+              mountPath: /model
+            - name: shm  # shared memory required by PyTorch for CUDA IPC
+              mountPath: /dev/shm
+
+          env:
+            - name: HUGGING_FACE_HUB_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: hf-token
+                  key: token
+                  optional: true  # only needed if pulling from HuggingFace directly
+
+      volumes:
+        - name: model-weights
+          hostPath:
+            # Matches the path written by the model-prefetch DaemonSet.
+            # Lives on the 200 GB EBS root volume provisioned in CDK.
+            # DirectoryOrCreate is a safety net for the first pod start before
+            # the DaemonSet has run; the init container then does the S3 download.
+            path: /mnt/models/mistral-7b-instruct-v0.2
+            type: DirectoryOrCreate
+        - name: shm
+          emptyDir:
+            medium: Memory
+            sizeLimit: "2Gi"

@@ -1,0 +1,18 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: vllm-pdb
+  namespace: inference
+spec:
+  # Ensure at least 1 replica stays available during:
+  #   - Spot node interruptions (15-second warning from AWS)
+  #   - kubectl drain (node maintenance / upgrades)
+  #   - Karpenter consolidation events
+  #
+  # This does NOT guarantee availability if all nodes are simultaneously
+  # interrupted (Spot mass interruption event). For production, run a
+  # minimum of 2 replicas and set minAvailable to 1.
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: vllm-inference

@@ -1,0 +1,63 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: vllm-inference-hpa
+  namespace: inference
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: vllm-inference
+  minReplicas: 1
+  maxReplicas: 3  # matches GPU node group maxSize
+
+  metrics:
+    # ── Primary: queue depth ─────────────────────────────────────────────────
+    # When > 5 requests are waiting, we're saturated and need another replica.
+    # Requires prometheus-adapter to expose vLLM metrics to the HPA API.
+    - type: Pods
+      pods:
+        metric:
+          name: vllm_num_requests_waiting
+        target:
+          type: AverageValue
+          averageValue: "5"  # scale out when avg pods have >5 pending requests
+
+    # ── Secondary: KV cache pressure ────────────────────────────────────────
+    # KV cache > 80% is a leading indicator of OOM kills. Scale before it hits.
+    - type: Pods
+      pods:
+        metric:
+          name: vllm_gpu_cache_usage_perc
+        target:
+          type: AverageValue
+          averageValue: "80"  # scale out when KV cache > 80%
+
+  behavior:
+    scaleUp:
+      # GPU nodes take 60–90s to provision with Karpenter; allow extra settle time
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 120  # add 1 pod at a time, evaluate every 2 min
+    scaleDown:
+      # Be conservative on scale-down — GPU nodes are expensive but cancellation
+      # latency is non-trivial. Wait 10 minutes of sustained low load.
+      stabilizationWindowSeconds: 600
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 300
+
+# Prerequisites:
+# 1. prometheus-adapter installed and configured (see helm/prometheus-adapter-values.yaml)
+# 2. Update custom.rules in prometheus-adapter to expose vllm_* metrics
+# 3. Fallback: use CPU-based HPA until custom metrics are wired:
+#    metrics:
+#      - type: Resource
+#        resource:
+#          name: cpu
+#          target:
+#            type: Utilization
+#            averageUtilization: 70

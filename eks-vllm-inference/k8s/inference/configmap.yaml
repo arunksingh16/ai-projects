@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vllm-config
+  namespace: inference
+data:
+  # Set this to the CDK output value of ModelStorageStack.ModelBucketName
+  model_bucket: "<MODEL_BUCKET_NAME>"
+  model_path: "models/mistral-7b-instruct-v0.2"
+  model_name: "mistral-7b"

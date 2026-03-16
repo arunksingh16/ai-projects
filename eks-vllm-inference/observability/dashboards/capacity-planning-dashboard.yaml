@@ -1,0 +1,342 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: capacity-planning-dashboard
+  namespace: observability
+  labels:
+    grafana_dashboard: "1"
+data:
+  capacity-planning.json: |
+    {
+      "title": "Capacity Planning",
+      "uid": "capacity-planning",
+      "tags": ["capacity", "hpa", "scaling"],
+      "refresh": "60s",
+      "schemaVersion": 38,
+      "version": 1,
+      "time": {"from": "now-3h", "to": "now"},
+      "panels": [
+        {
+          "id": 1,
+          "title": "Request Queue Depth Trend",
+          "description": "When this consistently exceeds 5, HPA should be triggering scale-out. If it stays high, node provisioning is lagging.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {"lineWidth": 2, "fillOpacity": 20},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 5},
+                  {"color": "red", "value": 20}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "vllm:num_requests_waiting",
+              "legendFormat": "waiting",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 2,
+          "title": "HPA Replica Count",
+          "description": "Tracks scale-out events. Cross-reference with queue depth to evaluate HPA responsiveness.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "min": 0,
+              "custom": {"lineWidth": 2, "fillOpacity": 10, "drawStyle": "bars"},
+              "color": {"mode": "fixed", "fixedColor": "blue"}
+            }
+          },
+          "targets": [
+            {
+              "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"inference\", horizontalpodautoscaler=\"vllm-inference-hpa\"}",
+              "legendFormat": "current replicas",
+              "refId": "A"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_spec_max_replicas{namespace=\"inference\", horizontalpodautoscaler=\"vllm-inference-hpa\"}",
+              "legendFormat": "max replicas",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 3,
+          "title": "KV Cache Pressure Trend",
+          "description": "Sustained >80% KV cache is a leading indicator of degraded TTFT and upcoming OOM. Watch this before a spike.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": {"lineWidth": 2, "fillOpacity": 15},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 70},
+                  {"color": "red", "value": 90}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "vllm:gpu_cache_usage_perc",
+              "legendFormat": "KV cache %",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 4,
+          "title": "Token Throughput (tokens/s)",
+          "description": "Tokens generated per second — the raw capacity metric. Divide cost by this to get cost-per-token.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {"lineWidth": 2, "fillOpacity": 10},
+              "displayName": "tokens/s"
+            }
+          },
+          "targets": [
+            {
+              "expr": "rate(vllm:generation_tokens_total[1m])",
+              "legendFormat": "generation tokens/s",
+              "refId": "A"
+            },
+            {
+              "expr": "rate(vllm:prompt_tokens_total[1m])",
+              "legendFormat": "prompt tokens/s",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 5,
+          "title": "Concurrency vs TTFT Degradation",
+          "description": "Cross-correlates running request count with p99 TTFT. The inflection point where TTFT climbs sharply is your saturation threshold — use this for SLO target setting.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 16},
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"lineWidth": 2}
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "TTFT p99 (s)"},
+                "properties": [{"id": "unit", "value": "s"}, {"id": "custom.axisPlacement", "value": "right"}]
+              },
+              {
+                "matcher": {"id": "byName", "options": "running requests"},
+                "properties": [{"id": "unit", "value": "short"}]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "expr": "vllm:num_requests_running",
+              "legendFormat": "running requests",
+              "refId": "A"
+            },
+            {
+              "expr": "histogram_quantile(0.99, rate(vllm:time_to_first_token_seconds_bucket[5m]))",
+              "legendFormat": "TTFT p99 (s)",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 6,
+          "title": "Scale-Out Events (replica increases)",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "custom": {"lineWidth": 1, "fillOpacity": 30, "drawStyle": "bars"},
+              "color": {"mode": "fixed", "fixedColor": "orange"}
+            }
+          },
+          "targets": [
+            {
+              "expr": "increase(kube_horizontalpodautoscaler_status_current_replicas{namespace=\"inference\", horizontalpodautoscaler=\"vllm-inference-hpa\"}[5m])",
+              "legendFormat": "replica increase",
+              "refId": "A"
+            }
+          ]
+        },
+        {
+          "id": 7,
+          "title": "Estimated Cost Per 1K Tokens (£)",
+          "description": "g5.xlarge On-Demand ~£1.10/hr. Divide by generation token rate to estimate cost. Adjust spot_price_per_hour if using Spot.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "currencyGBP",
+              "decimals": 4,
+              "custom": {"lineWidth": 2}
+            }
+          },
+          "targets": [
+            {
+              "expr": "(1.10 / 3600) / (rate(vllm:generation_tokens_total[5m]) + 0.001) * 1000",
+              "legendFormat": "£ per 1K gen tokens (On-Demand)",
+              "refId": "A"
+            },
+            {
+              "expr": "(0.55 / 3600) / (rate(vllm:generation_tokens_total[5m]) + 0.001) * 1000",
+              "legendFormat": "£ per 1K gen tokens (Spot ~50%)",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 8,
+          "title": "GPU Util / KV Cache / Queue — Combined View",
+          "description": "The three saturation signals in one view. When all three spike together, you've hit the hard limit for one replica.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 24, "x": 0, "y": 32},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "min": 0,
+              "max": 100,
+              "custom": {"lineWidth": 2}
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "requests waiting (×5)"},
+                "properties": [{"id": "unit", "value": "short"}, {"id": "custom.axisPlacement", "value": "right"}]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "expr": "dcgm_gpu_utilization",
+              "legendFormat": "GPU util %",
+              "refId": "A"
+            },
+            {
+              "expr": "vllm:gpu_cache_usage_perc",
+              "legendFormat": "KV cache %",
+              "refId": "B"
+            },
+            {
+              "expr": "vllm:num_requests_waiting * 5",
+              "legendFormat": "requests waiting (×5)",
+              "refId": "C"
+            }
+          ]
+        },
+        {
+          "id": 9,
+          "title": "GPU Node Count",
+          "description": "Number of Ready GPU nodes (label workload=gpu). Should step up from 1→2→3 as Cluster Autoscaler provisions new g5.xlarge nodes in response to pending pods.",
+          "type": "timeseries",
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 40},
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "decimals": 0,
+              "min": 0,
+              "custom": {"lineWidth": 2, "fillOpacity": 20, "drawStyle": "bars", "barAlignment": 0},
+              "color": {"mode": "fixed", "fixedColor": "purple"},
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {"color": "green", "value": null},
+                  {"color": "yellow", "value": 2},
+                  {"color": "red", "value": 3}
+                ]
+              }
+            }
+          },
+          "targets": [
+            {
+              "expr": "count(kube_node_labels{label_workload=\"gpu\"})",
+              "legendFormat": "GPU nodes (Ready)",
+              "refId": "A"
+            },
+            {
+              "expr": "count(kube_node_status_condition{condition=\"Ready\", status=\"true\"})",
+              "legendFormat": "All nodes (Ready)",
+              "refId": "B"
+            }
+          ]
+        },
+        {
+          "id": 10,
+          "title": "Scaling Causality: Queue → Replicas → Nodes",
+          "description": "Shows the full autoscaling chain on one timeline. Sequence should be: (1) requests waiting spikes above 5, (2) HPA increments replicas within ~2 min, (3) GPU node count increments ~60–90 s later once Cluster Autoscaler provisions the node. A gap between replica count and node count means node provisioning is lagging (or Cluster Autoscaler is not deployed).",
+          "type": "timeseries",
+          "gridPos": {"h": 10, "w": 12, "x": 12, "y": 40},
+          "fieldConfig": {
+            "defaults": {
+              "custom": {"lineWidth": 2, "spanNulls": false}
+            },
+            "overrides": [
+              {
+                "matcher": {"id": "byName", "options": "requests waiting"},
+                "properties": [
+                  {"id": "unit", "value": "short"},
+                  {"id": "custom.axisPlacement", "value": "right"},
+                  {"id": "color", "value": {"mode": "fixed", "fixedColor": "red"}},
+                  {"id": "custom.fillOpacity", "value": 10}
+                ]
+              },
+              {
+                "matcher": {"id": "byName", "options": "HPA replicas"},
+                "properties": [
+                  {"id": "unit", "value": "short"},
+                  {"id": "color", "value": {"mode": "fixed", "fixedColor": "blue"}},
+                  {"id": "custom.lineWidth", "value": 3}
+                ]
+              },
+              {
+                "matcher": {"id": "byName", "options": "GPU nodes"},
+                "properties": [
+                  {"id": "unit", "value": "short"},
+                  {"id": "color", "value": {"mode": "fixed", "fixedColor": "purple"}},
+                  {"id": "custom.lineWidth", "value": 3},
+                  {"id": "custom.drawStyle", "value": "bars"}
+                ]
+              }
+            ]
+          },
+          "targets": [
+            {
+              "expr": "vllm:num_requests_waiting",
+              "legendFormat": "requests waiting",
+              "refId": "A"
+            },
+            {
+              "expr": "kube_horizontalpodautoscaler_status_current_replicas{namespace=\"inference\", horizontalpodautoscaler=\"vllm-inference-hpa\"}",
+              "legendFormat": "HPA replicas",
+              "refId": "B"
+            },
+            {
+              "expr": "count(kube_node_labels{label_workload=\"gpu\"})",
+              "legendFormat": "GPU nodes",
+              "refId": "C"
+            }
+          ]
+        }
+      ]
+    }

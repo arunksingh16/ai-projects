@@ -83,7 +83,7 @@ helm install aws-load-balancer-controller eks/aws-load-balancer-controller \
   --version 1.14.0
 ```
 
-once done check pod status 
+- once done check pod status 
 
 <img width="1600" height="167" alt="image" src="https://github.com/user-attachments/assets/31f8456d-de14-45d8-963d-8c59f36d6703" />
 
@@ -101,7 +101,7 @@ aws autoscaling describe-auto-scaling-groups \
 --auto-scaling-group-names eks-gpu-inference-8ace61eb-79b6-b0b0-aec8-224e6a3347b8 \
 --query "AutoScalingGroups[*].Tags" --output table
 ```
-![alt text](image-3.png)
+![alt text](./assets/image-3.png)
 
 - Let's start with creating an IAM policy for the Cluster AutoScaler
 ```json
@@ -190,22 +190,22 @@ aws eks describe-cluster --name llm-inference-poc --query cluster.version --outp
 
 - Use the table to find out CA version for you, as per your cluster version [Cluster Autoscaler version](https://github.com/kubernetes/autoscaler/tree/master/cluster-autoscaler#releases)
 
-![alt text](image.png)
+![alt text](./assets/image.png)
 
 - Update your cluster name
 
-![alt text](image-1.png)
+![alt text](./assets/image-1.png)
 
 - deploy
 
-![alt text](image-2.png)
+![alt text](./assets/image-2.png)
 
 - enable pod identity 
 
-![alt text](image-4.png)
+![alt text](./assets/image-4.png)
 
 - validate 
-![alt text](image-5.png)
+![alt text](./assets/image-5.png)
 
 ```bash
 eksctl create podidentityassociation \

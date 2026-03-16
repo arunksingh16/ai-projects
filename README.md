@@ -8,6 +8,7 @@ You should know about
 - https://github.com/anthropics/skills/blob/main/skills/mcp-builder/SKILL.md
 - https://github.com/ComposioHQ/awesome-claude-skills
 - https://github.com/travisvn/awesome-claude-skills
+- https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf
 
 ### Diagrams
 - https://excalidraw.com/

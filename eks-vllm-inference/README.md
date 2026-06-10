@@ -9,6 +9,47 @@ aws eks list-access-entries --cluster-name llm-inference-poc \
 ```
 
 
+## download the model
+```
+hf download mistralai/Mistral-7B-Instruct-v0.2
+```
+the above will create folder in cache. This snapshot directory mirrors the repository contents exactly.
+```
+(.venv) ubuntu@ip-10-0-2-31:~/.cache/huggingface/hub/models--mistralai--Mistral-7B-Instruct-v0.2$ pwd
+/home/ubuntu/.cache/huggingface/hub/models--mistralai--Mistral-7B-Instruct-v0.2
+(.venv) ubuntu@ip-10-0-2-31:~/.cache/huggingface/hub/models--mistralai--Mistral-7B-Instruct-v0.2$ tree
+.
+├── blobs
+│   ├── 1e9f59c515a01088e1f7f72b68ab99f92d15fb96
+├── refs
+│   └── main
+└── snapshots
+    └── 63a8b081895390a26e140280378bc85ec8bce07a <commit hash>
+        ├── README.md -> ../../blobs/995aeafefffe388baf7e8722f9f97d1831c550b7
+        ├── config.json -> ../../blobs/c0519dc5f5cc99c2238a453da18994599c898b66
+        ├── generation_config.json -> ../../blobs/cb0c9b6c64cf786052efdd1a4ae597337b2f2708
+        ├── model.safetensors.index.json -> ../../blobs/361fa9d25a7f791e18ab531b3468ff8f2010642e
+        ├── pytorch_model.bin.index.json -> ../../blobs/76fccc201c63903bcc555d59944b099e5cc7d336
+        ├── special_tokens_map.json -> ../../blobs/451134b2ddc2e78555d1e857518c54b4bdc2e87d
+        ├── tokenizer.json -> ../../blobs/1e9f59c515a01088e1f7f72b68ab99f92d15fb96
+        ├── tokenizer.model -> ../../blobs/dadfd56d766715c61d2ef780a525ab43b8e6da4de6865bda3d95fdef5e134055
+        └── tokenizer_config.json -> ../../blobs/f63c0374bad221568938f908e397a38d9f0dfac0
+```
+
+or use 
+
+```
+hf download mistralai/Mistral-7B-Instruct-v0.3 --local-dir ./Mistral-7B-Instruct-v0.3
+```
+--local-dir recreates the repository structure in that folder.
+
+## upload the model in bucket
+```
+aws s3 sync ./Mistral-7B-Instruct-v0.3 s3://llm-model-artifacts-<account>-eu-west-1/models/Mistral-7B-Instruct-v0.3
+```
+
+
+
 ## Install CSI driver for Amazon EBS
 
 ```

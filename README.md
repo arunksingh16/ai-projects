@@ -4,11 +4,13 @@ You should know about
 - chain-of-thought prompting
 - Key features of an AI agent
 
-### Claude Code Skills
+### Skills Website 
 - https://github.com/anthropics/skills/blob/main/skills/mcp-builder/SKILL.md
 - https://github.com/ComposioHQ/awesome-claude-skills
 - https://github.com/travisvn/awesome-claude-skills
 - https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf
+- https://awesome-copilot.github.com/
+- https://microsoft.github.io/skills/
 
 ### Diagrams
 - https://excalidraw.com/
